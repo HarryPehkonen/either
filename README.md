@@ -32,7 +32,7 @@ Add `either` as a dependency in your `pubspec.yaml` file:
 dependencies:
   either:
     git:
-      url: https://github.com/yourusername/either.git
+      url: https://github.com/harrypehkonen/either.git
       ref: main
 ```
 
@@ -44,25 +44,55 @@ Then, run dart pub get to install the package.
 
 Create and use `Either` instances for handling computations that can succeed or fail.
 
-[code goes here]
+```dart
+import 'package:either/either.dart';
+
+void main() {
+  basicUsage();
+}
+
+void basicUsage() {
+  final either = Right<String, int>(42);
+  final eitherError = Left<String, int>('Error occurred');
+
+  either.fold(
+    (left) => print('Left: $left'),
+    (right) => print('Right: $right'),
+  );
+
+  eitherError.fold(
+    (left) => print('Left: $left'),
+    (right) => print('Right: $right'),
+  );
+}
+```
 
 ### Transformations
 
 Transform the values inside an Either using `map`, `mapLeft`, and `biMap`.
 
 ```dart
-import 'package:either/either.dart';
+void main() {
+  transformationExample();
+}
 
-final either = Right<String, int>(42);
+void transformationExample() {
+  final either = Right<String, int>(42);
+  final result = either.map((r) => r * 2);
 
-// Using map to transform the Right value
-final transformed = either.map((r) => r * 2);
+  result.fold(
+    (left) => print('Left: $left'),
+    (right) => print('Right after transformation: $right'),
+  );
 
-// Using biMap to transform both Left and Right values
-final biTransformed = either.biMap(
-  (left) => 'New $left',
-  (right) => right * 2,
-);
+  final eitherError = Left<String, int>('Error occurred');
+  final errorResult = eitherError.map((r) => r * 2);
+
+  errorResult.fold(
+    (left) => print('Left after transformation: $left'),
+    (right) => print('Right: $right'),
+  );
+}
 ```
 
 ### Error Handling
@@ -70,15 +100,19 @@ final biTransformed = either.biMap(
 Handle errors by providing default values or alternative `Either` instances.
 
 ```dart
-import 'package:either/either.dart';
+void main() {
+  errorHandlingExample();
+}
 
-final either = Left<String, int>('Error occurred');
+void errorHandlingExample() {
+  final either = Left<String, int>('Error occurred');
+  final value = either.getOrElse(0);
+  print('Error handling, default value: $value');
 
-// Providing a default value
-final value = either.getOrElse(0);
-
-// Providing an alternative Either
-final alternative = either.orElse(Right<String, int>(100));
+  final eitherSuccess = Right<String, int>(42);
+  final successValue = eitherSuccess.getOrElse(0);
+  print('Success handling, value: $successValue');
+}
 ```
 
 ### Asynchronous Operations
@@ -86,22 +120,158 @@ final alternative = either.orElse(Right<String, int>(100));
 Work with asynchronous computations using `asyncMap` and `asyncFold`.
 
 ```dart
-import 'package:either/either.dart';
+void main() {
+  asyncExample();
+}
 
 Future<void> asyncExample() async {
   final either = Right<String, int>(42);
 
-  // Using asyncMap to transform the Right value asynchronously
   final result = await either.asyncMap((r) async {
     await Future.delayed(Duration(seconds: 1));
     return r * 2;
   });
 
-  // Using asyncFold to handle Left and Right cases asynchronously
-  final foldedResult = await either.asyncFold(
-    (left) async => 'Failed with: $left',
-    (right) async => 'Success with: $right',
+  result.fold(
+    (left) => print('Left: $left'),
+    (right) => print('Right after async transformation: $right'),
   );
+}
+
+```
+
+### Additional Examples
+
+#### `mapLeft`
+
+Transform the left value inside an Either using `mapLeft`.
+
+```dart
+void main() {
+  additionalExamples();
+}
+
+Future<void> additionalExamples() async {
+  // Example for `mapLeft`
+  final eitherLeft = Left<String, int>('Error occurred');
+  final mapLeftResult = eitherLeft.mapLeft((left) => 'New $left');
+  mapLeftResult.fold(
+    (left) => print('Left after mapLeft: $left'),
+    (right) => print('Right: $right'),
+  );
+}
+```
+
+#### `biMap`
+
+Transform both left and right values inside an Either using `biMap`.
+
+```dart
+void main() {
+  additionalExamples();
+}
+
+Future<void> additionalExamples() async {
+  // Example for `biMap`
+  final eitherRight = Right<String, int>(42);
+  final biMapResult = eitherRight.biMap(
+    (left) => 'New $left',
+    (right) => right * 2,
+  );
+  biMapResult.fold(
+    (left) => print('Left after biMap: $left'),
+    (right) => print('Right after biMap: $right'),
+  );
+
+}
+```
+
+#### `orElse`
+
+Provide an alternative Either if the current one is a Left.
+
+```dart
+void main() {
+  additionalExamples();
+}
+
+Future<void> additionalExamples() async {
+  // Example for `orElse`
+  final orElseResult = eitherLeft.orElse(Right<String, int>(100));
+  orElseResult.fold(
+    (left) => print('Left: $left'),
+    (right) => print('Right after orElse: $right'),
+  );
+
+}
+```
+
+#### `getOrElse`
+
+Get the right value or provide a default value if the Either is a Left.
+
+```dart
+import 'package:either/either.dart';
+
+void main() {
+  // Example usage of Either with getOrElse
+  Either<String, int> rightValue = Right(42);
+  Either<String, int> leftValue = Left("Error");
+
+  // Using getOrElse to provide default values
+  int result1 = rightValue.getOrElse(0); // Should be 42
+  int result2 = leftValue.getOrElse(0);  // Should be 0
+
+  print('Result 1: $result1'); // Output: Result 1: 42
+  print('Result 2: $result2'); // Output: Result 2: 0
+}
+```
+
+#### `asyncMap`
+
+Asynchronously transform the right value inside an Either.
+
+```dart
+void main() {
+  asyncExample();
+}
+
+Future<void> asyncExample() async {
+  final either = Right<String, int>(42);
+
+  final result = await either.asyncMap((r) async {
+    await Future.delayed(Duration(seconds: 1));
+    return r * 2;
+  });
+
+  result.fold(
+    (left) => print('Left: $left'),
+    (right) => print('Right after async transformation: $right'),
+  );
+}```
+
+#### `asyncFold`
+
+Asynchronously handle both left and right cases inside an Either.
+
+```dart
+void main() {
+  additionalExamples();
+}
+
+Future<void> additionalExamples() async {
+  // Example for `asyncFold`
+  final asyncFoldResult = await eitherLeft.asyncFold(
+    (left) async {
+      await Future.delayed(Duration(seconds: 1));
+      return 'Failed with: $left';
+    },
+    (right) async {
+      await Future.delayed(Duration(seconds: 1));
+      return 'Success with: $right';
+    },
+  );
+  print('Async fold result: $asyncFoldResult');
 }
 ```
 
